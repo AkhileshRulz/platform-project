@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Mini Platform</title>
+</head>
+<body>
+<h1>Mini Platform Running 🚀</h1>
+<p>Frontend is served by Nginx container.</p>
+<h2>Backend Data:</h2>
+<button onclick="getData()">Fetch DB Info</button>
+<pre id="output"></pre>
+
+<script>
+function getData() {
+  fetch("/api/db")
+    .then(res => res.text())
+    .then(data => {
+      document.getElementById("output").innerText = data;
+    });
+}
+</script>
+
+</body>
+</html>
