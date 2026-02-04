@@ -20,7 +20,7 @@ def db_test():
         cur = conn.cursor()
         cur.execute("SELECT version();")
         version = cur.fetchone()
-        return {"message": "DEPLOYMENT SUCCESSFUL"}, 200
+        return {"message": "AUTO DEPLOY WORKED"}, 200
     except Exception as e:
         return f"DB connection failed: {e}"
 
