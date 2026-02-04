@@ -26,23 +26,34 @@ def db_test():
 
 @app.route("/notes", methods=["POST"])
 def add_note():
-    data = request.get_json()
-    content = data.get("content")
+    try:
+        data = request.get_json()
 
-    conn = psycopg2.connect(
-        host=os.environ.get("DB_HOST"),
-        database=os.environ.get("POSTGRES_DB"),
-        user=os.environ.get("POSTGRES_USER"),
-        password=os.environ.get("POSTGRES_PASSWORD")
-    )
-    cur = conn.cursor()
-    cur.execute("INSERT INTO notes (content) VALUES (%s) RETURNING id;", (content,))
-    note_id = cur.fetchone()[0]
-    conn.commit()
-    cur.close()
-    conn.close()
+        if not data or "content" not in data:
+            return jsonify({"error": "Content is required"}), 400
 
-    return jsonify({"id": note_id, "content": content}), 201
+        content = data["content"].strip()
+
+        if not content:
+            return jsonify({"error": "Content cannot be empty"}), 400
+
+        conn = psycopg2.connect(
+            host=os.environ.get("DB_HOST"),
+            database=os.environ.get("POSTGRES_DB"),
+            user=os.environ.get("POSTGRES_USER"),
+            password=os.environ.get("POSTGRES_PASSWORD")
+        )
+        cur = conn.cursor()
+        cur.execute("INSERT INTO notes (content) VALUES (%s) RETURNING id;", (content,))
+        note_id = cur.fetchone()[0]
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({"id": note_id, "content": content}), 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/notes", methods=["GET"])
 def get_notes():
