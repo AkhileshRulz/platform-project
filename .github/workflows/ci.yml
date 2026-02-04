@@ -27,6 +27,9 @@ jobs:
       - name: Run container
         run: docker run -d -p 5000:5000 --name backend-test backend-test
 
+      - name: Show container logs
+        run: docker logs backend-test
+
       - name: Wait for app to be ready
         run: |
           for i in {1..20}; do
