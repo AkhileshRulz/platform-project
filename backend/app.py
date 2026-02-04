@@ -20,7 +20,7 @@ def db_test():
         cur = conn.cursor()
         cur.execute("SELECT version();")
         version = cur.fetchone()
-        return f"DB Connected! PostgreSQL version: {version}"
+	return {"message": "DEPLOYMENT SUCCESSFUL 😈"}, 200
     except Exception as e:
         return f"DB connection failed: {e}"
 
