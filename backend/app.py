@@ -1,6 +1,14 @@
 from flask import Flask, request, jsonify
 import os
 import psycopg2
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s"
+)
+
+logger = logging.getLogger(__name__)
 
 class Config:
     DB_HOST = os.environ.get("DB_HOST")
@@ -50,7 +58,8 @@ def db_test():
         version = cur.fetchone()
         return {"message": "AUTO DEPLOY WORKED"}, 200
     except Exception as e:
-        return f"DB connection failed: {e}"
+        logger.error(f"DB connection failed: {e}")
+        return "Database error", 500
 
 @app.route("/notes", methods=["POST"])
 def add_note():
@@ -66,7 +75,7 @@ def add_note():
             return jsonify({"error": "Content cannot be empty"}), 400
 
         note_id = insert_note(content)
-
+        logger.info(f"Creating note with content length={len(content)}")
         return jsonify({"id": note_id, "content": content}), 201
 
     except Exception as e:
@@ -81,6 +90,7 @@ def get_notes():
 
 @app.route("/health")
 def health():
+    logger.info("Health check OK")
     return {"status": "ok"}, 200
 
 if __name__ == "__main__":
