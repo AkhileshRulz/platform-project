@@ -2,6 +2,12 @@ from flask import Flask, request, jsonify
 import os
 import psycopg2
 
+class Config:
+    DB_HOST = os.environ.get("DB_HOST")
+    DB_NAME = os.environ.get("POSTGRES_DB")
+    DB_USER = os.environ.get("POSTGRES_USER")
+    DB_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
+
 app = Flask(__name__)
 
 @app.route("/")
@@ -10,11 +16,12 @@ def home():
 
 def get_db_connection():
     return psycopg2.connect(
-        host=os.environ.get("DB_HOST"),
-        database=os.environ.get("POSTGRES_DB"),
-        user=os.environ.get("POSTGRES_USER"),
-        password=os.environ.get("POSTGRES_PASSWORD")
+        host=Config.DB_HOST,
+        database=Config.DB_NAME,
+        user=Config.DB_USER,
+        password=Config.DB_PASSWORD
     )
+
 def insert_note(content):
     conn = get_db_connection()
     cur = conn.cursor()
