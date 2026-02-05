@@ -15,6 +15,24 @@ def get_db_connection():
         user=os.environ.get("POSTGRES_USER"),
         password=os.environ.get("POSTGRES_PASSWORD")
     )
+def insert_note(content):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("INSERT INTO notes (content) VALUES (%s) RETURNING id;", (content,))
+    note_id = cur.fetchone()[0]
+    conn.commit()
+    cur.close()
+    conn.close()
+    return note_id
+
+def fetch_notes():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id, content, created_at FROM notes ORDER BY created_at DESC;")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
 
 @app.route("/db")
 def db_test():
@@ -40,13 +58,7 @@ def add_note():
         if not content:
             return jsonify({"error": "Content cannot be empty"}), 400
 
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("INSERT INTO notes (content) VALUES (%s) RETURNING id;", (content,))
-        note_id = cur.fetchone()[0]
-        conn.commit()
-        cur.close()
-        conn.close()
+        note_id = insert_note(content)
 
         return jsonify({"id": note_id, "content": content}), 201
 
@@ -55,12 +67,7 @@ def add_note():
 
 @app.route("/notes", methods=["GET"])
 def get_notes():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT id, content, created_at FROM notes ORDER BY created_at DESC;")
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
+    rows = fetch_notes()
 
     notes = [{"id": r[0], "content": r[1], "created_at": r[2].isoformat()} for r in rows]
     return jsonify(notes), 200
