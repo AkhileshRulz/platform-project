@@ -9,4 +9,4 @@ COPY app.py .
 
 RUN apt-get update && apt-get install -y curl
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+CMD ["gunicorn", "--workers", "3", "--bind", "0.0.0.0:5000", "app:app"]
