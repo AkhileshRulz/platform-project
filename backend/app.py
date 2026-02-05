@@ -8,15 +8,18 @@ app = Flask(__name__)
 def home():
     return "Backend is running!"
 
+def get_db_connection():
+    return psycopg2.connect(
+        host=os.environ.get("DB_HOST"),
+        database=os.environ.get("POSTGRES_DB"),
+        user=os.environ.get("POSTGRES_USER"),
+        password=os.environ.get("POSTGRES_PASSWORD")
+    )
+
 @app.route("/db")
 def db_test():
     try:
-        conn = psycopg2.connect(
-            host=os.environ.get("DB_HOST"),
-            database=os.environ.get("POSTGRES_DB"),
-            user=os.environ.get("POSTGRES_USER"),
-            password=os.environ.get("POSTGRES_PASSWORD")
-        )
+        conn = get_db_connection()
         cur = conn.cursor()
         cur.execute("SELECT version();")
         version = cur.fetchone()
@@ -37,12 +40,7 @@ def add_note():
         if not content:
             return jsonify({"error": "Content cannot be empty"}), 400
 
-        conn = psycopg2.connect(
-            host=os.environ.get("DB_HOST"),
-            database=os.environ.get("POSTGRES_DB"),
-            user=os.environ.get("POSTGRES_USER"),
-            password=os.environ.get("POSTGRES_PASSWORD")
-        )
+        conn = get_db_connection()
         cur = conn.cursor()
         cur.execute("INSERT INTO notes (content) VALUES (%s) RETURNING id;", (content,))
         note_id = cur.fetchone()[0]
@@ -57,12 +55,7 @@ def add_note():
 
 @app.route("/notes", methods=["GET"])
 def get_notes():
-    conn = psycopg2.connect(
-        host=os.environ.get("DB_HOST"),
-        database=os.environ.get("POSTGRES_DB"),
-        user=os.environ.get("POSTGRES_USER"),
-        password=os.environ.get("POSTGRES_PASSWORD")
-    )
+    conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("SELECT id, content, created_at FROM notes ORDER BY created_at DESC;")
     rows = cur.fetchall()
