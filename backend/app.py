@@ -1,7 +1,8 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, g
 import os
 import psycopg2
 import logging
+import time
 
 logging.basicConfig(
     level=logging.INFO,
@@ -9,6 +10,18 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+@app.before_request
+def start_timer():
+    g.start_time = time.time()
+
+@app.after_request
+def log_request(response):
+    duration = round((time.time() - g.start_time) * 1000)
+    logger.info(
+        f"{request.method} {request.path} {response.status_code} {duration}ms"
+    )
+    return response
 
 class Config:
     DB_HOST = os.environ.get("DB_HOST")
