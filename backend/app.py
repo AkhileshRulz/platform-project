@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, g
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 import os
 import psycopg2
 import logging
@@ -23,11 +24,30 @@ app = Flask(__name__)
 def start_timer():
     g.start_time = time.time()
 
+REQUEST_COUNT = Counter(
+    "app_requests_total",
+    "Total HTTP requests",
+    ["method", "endpoint", "status"]
+)
+
+REQUEST_LATENCY = Histogram(
+    "app_request_latency_seconds",
+    "Request latency",
+    ["endpoint"]
+)
+
 @app.after_request
 def log_request(response):
-    duration = round((time.time() - g.start_time) * 1000)
+    duration = time.time() - g.start_time
+
+    REQUEST_COUNT.labels(
+        request.method, request.path, response.status_code
+    ).inc()
+
+    REQUEST_LATENCY.labels(request.path).observe(duration)
+
     logger.info(
-        f"{request.method} {request.path} {response.status_code} {duration}ms"
+        f"{request.method} {request.path} {response.status_code} {round(duration*1000)}ms"
     )
     return response
 
@@ -61,6 +81,10 @@ def fetch_notes():
     cur.close()
     conn.close()
     return rows
+
+@app.route("/metrics")
+def metrics():
+    return generate_latest(), 200, {"Content-Type": CONTENT_TYPE_LATEST}
 
 @app.route("/db")
 def db_test():
