@@ -11,6 +11,14 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+class Config:
+    DB_HOST = os.environ.get("DB_HOST")
+    DB_NAME = os.environ.get("POSTGRES_DB")
+    DB_USER = os.environ.get("POSTGRES_USER")
+    DB_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
+
+app = Flask(__name__)
+
 @app.before_request
 def start_timer():
     g.start_time = time.time()
@@ -22,14 +30,6 @@ def log_request(response):
         f"{request.method} {request.path} {response.status_code} {duration}ms"
     )
     return response
-
-class Config:
-    DB_HOST = os.environ.get("DB_HOST")
-    DB_NAME = os.environ.get("POSTGRES_DB")
-    DB_USER = os.environ.get("POSTGRES_USER")
-    DB_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
-
-app = Flask(__name__)
 
 @app.route("/")
 def home():
