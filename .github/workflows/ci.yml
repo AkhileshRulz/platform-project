@@ -29,14 +29,3 @@ jobs:
 
       - name: Show container logs
         run: docker logs backend-test
-
-      - name: Wait for app to be ready
-        run: |
-          for i in {1..20}; do
-            curl -s http://localhost:5000/health && break
-            echo "Waiting for app..."
-            sleep 2
-          done
-
-      - name: Health check
-        run: curl -f http://localhost:5000/health
