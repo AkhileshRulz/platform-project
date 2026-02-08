@@ -1,5 +1,8 @@
 from flask import Flask, request, jsonify, g
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_httpauth import HTTPBasicAuth
 import os
 import psycopg2
 import logging
@@ -19,6 +22,24 @@ class Config:
     DB_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
 
 app = Flask(__name__)
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["100 per minute"]
+)
+
+auth = HTTPBasicAuth()
+
+USERS = {
+    os.environ.get("API_USER"): os.environ.get("API_PASS")
+}
+
+@auth.verify_password
+def verify(username, password):
+    if not username or not password:
+        return False
+    return USERS.get(username) == password
 
 @app.before_request
 def start_timer():
@@ -99,6 +120,8 @@ def db_test():
         return "Database error", 500
 
 @app.route("/notes", methods=["POST"])
+@auth.login_required
+@limiter.limit("10 per minute")
 def add_note():
     try:
         data = request.get_json()

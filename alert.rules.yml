@@ -1,0 +1,30 @@
+groups:
+  - name: backend-alerts
+    rules:
+
+      - alert: HighErrorRate
+        expr: rate(app_requests_total{status!="200"}[1m]) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "More than 10% of requests are failing"
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(app_request_latency_seconds_bucket[1m])) > 1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High latency"
+          description: "95th percentile latency is over 1 second"
+
+      - alert: BackendDown
+        expr: up{job="backend"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend service is down"
+          description: "Prometheus cannot scrape backend metrics"
