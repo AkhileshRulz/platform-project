@@ -77,6 +77,10 @@ services:
     depends_on:
       - loki
 
+  redis:
+    image: redis:7
+    restart: always
+
 volumes:
   pgdata:
   grafana-data:

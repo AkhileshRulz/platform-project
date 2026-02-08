@@ -4,3 +4,4 @@ gunicorn
 prometheus-client
 Flask-Limiter
 Flask-HTTPAuth
+redis
