@@ -151,8 +151,19 @@ def get_notes():
 
 @app.route("/health")
 def health():
-    logger.info("Health check OK")
-    return {"status": "ok"}, 200
+    try:
+        conn = psycopg2.connect(
+            host=Config.DB_HOST,
+            database=Config.DB_NAME,
+            user=Config.DB_USER,
+            password=Config.DB_PASSWORD,
+            connect_timeout=2
+        )
+        conn.close()
+        return {"status": "ok"}, 200
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        return {"status": "unhealthy"}, 503
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
