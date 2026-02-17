@@ -78,17 +78,22 @@ def log_request(response):
 def home():
     return "Backend is running!"
 
-db_pool = SimpleConnectionPool(
-    minconn=1,
-    maxconn=5,
-    host=Config.DB_HOST,
-    database=Config.DB_NAME,
-    user=Config.DB_USER,
-    password=Config.DB_PASSWORD,
-    connect_timeout=1
-)
+db_pool = None
 
 def get_db_connection():
+    global db_pool
+
+    if db_pool is None:
+        db_pool = SimpleConnectionPool(
+            minconn=1,
+            maxconn=5,
+            host=Config.DB_HOST,
+            database=Config.DB_NAME,
+            user=Config.DB_USER,
+            password=Config.DB_PASSWORD,
+            connect_timeout=1
+        )
+
     return db_pool.getconn()
 
 def insert_note(content):
