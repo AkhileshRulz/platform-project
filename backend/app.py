@@ -150,21 +150,19 @@ def get_notes():
     notes = [{"id": r[0], "content": r[1], "created_at": r[2].isoformat()} for r in rows]
     return jsonify(notes), 200
 
-@app.route("/health")
-def health():
+@app.route("/live")
+def live():
+    return {"status": "alive"}, 200
+
+@app.route("/ready")
+def ready():
     try:
-        conn = psycopg2.connect(
-            host=Config.DB_HOST,
-            database=Config.DB_NAME,
-            user=Config.DB_USER,
-            password=Config.DB_PASSWORD,
-            connect_timeout=1
-        )
+        conn = get_db_connection()
         conn.close()
-        return {"status": "ok"}, 200
+        return {"status": "ready"}, 200
     except Exception as e:
-        logger.error(f"Health check failed: {e}")
-        return {"status": "unhealthy"}, 503
+        logger.error(f"Readiness failed: {e}")
+        return {"status": "not ready"}, 503
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
