@@ -5,6 +5,7 @@ from flask_limiter.util import get_remote_address
 from flask_httpauth import HTTPBasicAuth
 import os
 import psycopg2
+from psycopg2.pool import SimpleConnectionPool
 import logging
 import time
 
@@ -77,14 +78,18 @@ def log_request(response):
 def home():
     return "Backend is running!"
 
+db_pool = SimpleConnectionPool(
+    minconn=1,
+    maxconn=5,
+    host=Config.DB_HOST,
+    database=Config.DB_NAME,
+    user=Config.DB_USER,
+    password=Config.DB_PASSWORD,
+    connect_timeout=1
+)
+
 def get_db_connection():
-    return psycopg2.connect(
-        host=Config.DB_HOST,
-        database=Config.DB_NAME,
-        user=Config.DB_USER,
-        password=Config.DB_PASSWORD,
-        connect_timeout=1
-    )
+    return db_pool.getconn()
 
 def insert_note(content):
     conn = get_db_connection()
@@ -93,7 +98,7 @@ def insert_note(content):
     note_id = cur.fetchone()[0]
     conn.commit()
     cur.close()
-    conn.close()
+    db_pool.putconn(conn)
     return note_id
 
 def fetch_notes():
@@ -102,7 +107,7 @@ def fetch_notes():
     cur.execute("SELECT id, content, created_at FROM notes ORDER BY created_at DESC;")
     rows = cur.fetchall()
     cur.close()
-    conn.close()
+    db_pool.putconn(conn)
     return rows
 
 @app.route("/metrics")
@@ -158,7 +163,7 @@ def live():
 def ready():
     try:
         conn = get_db_connection()
-        conn.close()
+        db_pool.putconn(conn)
         return {"status": "ready"}, 200
     except Exception as e:
         logger.error(f"Readiness failed: {e}")
