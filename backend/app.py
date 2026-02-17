@@ -82,7 +82,8 @@ def get_db_connection():
         host=Config.DB_HOST,
         database=Config.DB_NAME,
         user=Config.DB_USER,
-        password=Config.DB_PASSWORD
+        password=Config.DB_PASSWORD,
+        connect_timeout=1
     )
 
 def insert_note(content):
@@ -157,7 +158,7 @@ def health():
             database=Config.DB_NAME,
             user=Config.DB_USER,
             password=Config.DB_PASSWORD,
-            connect_timeout=2
+            connect_timeout=1
         )
         conn.close()
         return {"status": "ok"}, 200
