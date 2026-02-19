@@ -18,10 +18,16 @@ jobs:
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Tag image
+      - name: Tag image with SHA
+        run: docker tag backend-test ${{ secrets.DOCKER_USERNAME }}/backend-app:${{ github.sha }}
+
+      - name: Tag image as latest
         run: docker tag backend-test ${{ secrets.DOCKER_USERNAME }}/backend-app:latest
 
-      - name: Push image
+      - name: Push SHA image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/backend-app:${{ github.sha }}
+
+      - name: Push latest image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/backend-app:latest
 
       - name: Run container
